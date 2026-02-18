@@ -88,7 +88,13 @@ export class MapScene {
       }
     }
 
-    this.scrollY = targetRow * 80 - 200;
+    // The node y position in local coords is: totalHeight - targetRow * rowSpacing
+    // We want that position to appear roughly at canvas center (h/2)
+    // Rendered at: h*0.55 + scrollY + nodeY => should be ~h/2
+    // scrollY = h/2 - h*0.55 - nodeY = -0.05*h - nodeY
+    const totalHeight = map.nodes.length * 80;
+    const nodeY = totalHeight - targetRow * 80;
+    this.scrollY = -nodeY + 100;
   }
 
   update(dt) {}
