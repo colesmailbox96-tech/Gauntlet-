@@ -1,0 +1,25 @@
+{
+  "name": "gauntlet-",
+  "version": "1.0.0",
+  "description": "Arcane Gauntlet app scaffold",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/colesmailbox96-tech/Gauntlet-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/colesmailbox96-tech/Gauntlet-/issues"
+  },
+  "homepage": "https://github.com/colesmailbox96-tech/Gauntlet-#readme",
+  "devDependencies": {
+    "vite": "^7.3.1"
+  }
+}
