@@ -4,8 +4,8 @@ if (app) {
   app.innerHTML = `
     <h1>Arcane Gauntlet</h1>
     <p id="run-status">Ready to begin a practice run.</p>
-    <canvas id="game-canvas" aria-label="Practice combat preview"></canvas>
-    <button id="start-run" type="button">Start Practice Run</button>
+    <canvas id="game-canvas" role="img" aria-label="Practice combat preview"></canvas>
+    <button id="start-run" type="button" aria-label="Start practice run">Start Practice Run</button>
   `;
 
   const style = document.createElement('style');
@@ -21,7 +21,10 @@ if (app) {
   const runStatus = document.querySelector('#run-status');
   const startRunButton = document.querySelector('#start-run');
   const context = canvas?.getContext('2d');
-  const state = { started: false, floor: 1, enemyHp: 24 };
+  const DAMAGE_PER_ACTION = 6;
+  const HP_BAR_SCALE = 8;
+  const ENEMY_STARTING_HP = 24;
+  const state = { started: false, floor: 0, enemyHp: ENEMY_STARTING_HP };
 
   const drawScene = () => {
     if (!canvas || !context) return;
@@ -36,15 +39,36 @@ if (app) {
     context.fillText(`Floor ${state.floor}`, 32, 100);
     context.fillText(`Enemy HP: ${state.enemyHp}`, 32, 134);
     context.fillStyle = '#ef4444';
-    context.fillRect(32, 156, Math.max(0, state.enemyHp * 8), 24);
+    context.fillRect(32, 156, Math.min(canvas.width - 64, Math.max(0, state.enemyHp * HP_BAR_SCALE)), 24);
   };
 
   startRunButton?.addEventListener('click', () => {
-    state.started = true;
-    state.floor += 1;
-    state.enemyHp = Math.max(0, state.enemyHp - 6);
+    const justStarted = !state.started;
+    if (justStarted) {
+      state.started = true;
+      state.floor = 1;
+      startRunButton.textContent = 'Attack Enemy';
+      startRunButton.setAttribute('aria-label', 'Attack the enemy to deal damage');
+      if (runStatus) {
+        runStatus.textContent = `Run started — floor ${state.floor}, enemy HP ${state.enemyHp}.`;
+      }
+      drawScene();
+      return;
+    }
+
+    state.enemyHp = Math.max(0, state.enemyHp - DAMAGE_PER_ACTION);
+    if (state.enemyHp === 0) {
+      state.floor += 1;
+      state.enemyHp = ENEMY_STARTING_HP;
+      if (runStatus) {
+        runStatus.textContent = `Enemy defeated — entering floor ${state.floor} with enemy HP ${state.enemyHp}.`;
+      }
+      drawScene();
+      return;
+    }
+
     if (runStatus) {
-      runStatus.textContent = `Run started — entering floor ${state.floor} with enemy HP ${state.enemyHp}.`;
+      runStatus.textContent = `Attack landed — floor ${state.floor}, enemy HP ${state.enemyHp}.`;
     }
     drawScene();
   });
