@@ -1,0 +1,33 @@
+[
+  {
+    "id": "the_warden",
+    "name": "The Warden",
+    "act": 1,
+    "tier": "boss",
+    "hp": { "min": 210, "max": 210 },
+    "phases": [
+      {
+        "id": "phase_1",
+        "name": "Sentinel Stance",
+        "trigger": { "type": "start" },
+        "pattern": [
+          { "id": "heavy_strike", "intent": "attack", "weight": 40, "effects": [{ "type": "damage", "value": 16 }] },
+          { "id": "fortify", "intent": "defend", "weight": 35, "effects": [{ "type": "block", "value": 20 }] },
+          { "id": "chains", "intent": "debuff", "weight": 25, "effects": [{ "type": "apply_status", "status": "weak", "value": 2, "target": "player" }] }
+        ],
+        "onEnter": []
+      },
+      {
+        "id": "phase_2",
+        "name": "Berserker Rage",
+        "trigger": { "type": "hp_below_percent", "value": 50 },
+        "pattern": [
+          { "id": "frenzy", "intent": "attack", "weight": 50, "effects": [{ "type": "damage", "value": 8, "times": 3 }] },
+          { "id": "war_cry", "intent": "buff", "weight": 30, "effects": [{ "type": "apply_status", "status": "strength", "value": 3, "target": "self" }] },
+          { "id": "slam", "intent": "attack", "weight": 20, "effects": [{ "type": "damage", "value": 28 }] }
+        ],
+        "onEnter": []
+      }
+    ]
+  }
+]

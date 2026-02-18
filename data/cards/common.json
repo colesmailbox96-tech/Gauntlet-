@@ -1,0 +1,132 @@
+[
+  {
+    "id": "cleave_001",
+    "name": "Cleave",
+    "type": "attack",
+    "rarity": "common",
+    "energyCost": 1,
+    "description": "Deal {damage} damage to ALL enemies.",
+    "effects": [{ "type": "damage", "target": "all_enemies", "value": 8 }],
+    "upgraded": {
+      "name": "Cleave+",
+      "effects": [{ "type": "damage", "target": "all_enemies", "value": 11 }]
+    },
+    "keywords": [],
+    "tags": []
+  },
+  {
+    "id": "pommel_strike_001",
+    "name": "Pommel Strike",
+    "type": "attack",
+    "rarity": "common",
+    "energyCost": 1,
+    "description": "Deal {damage} damage. Draw 1 card.",
+    "effects": [
+      { "type": "damage", "target": "single_enemy", "value": 9 },
+      { "type": "draw", "value": 1 }
+    ],
+    "upgraded": {
+      "name": "Pommel Strike+",
+      "effects": [
+        { "type": "damage", "target": "single_enemy", "value": 10 },
+        { "type": "draw", "value": 2 }
+      ]
+    },
+    "keywords": [],
+    "tags": []
+  },
+  {
+    "id": "iron_wave_001",
+    "name": "Iron Wave",
+    "type": "attack",
+    "rarity": "common",
+    "energyCost": 1,
+    "description": "Gain {block} Block. Deal {damage} damage.",
+    "effects": [
+      { "type": "block", "value": 5 },
+      { "type": "damage", "target": "single_enemy", "value": 5 }
+    ],
+    "upgraded": {
+      "name": "Iron Wave+",
+      "effects": [
+        { "type": "block", "value": 7 },
+        { "type": "damage", "target": "single_enemy", "value": 7 }
+      ]
+    },
+    "keywords": [],
+    "tags": []
+  },
+  {
+    "id": "shrug_it_off_001",
+    "name": "Shrug It Off",
+    "type": "skill",
+    "rarity": "common",
+    "energyCost": 1,
+    "description": "Gain {block} Block. Draw 1 card.",
+    "effects": [
+      { "type": "block", "value": 8 },
+      { "type": "draw", "value": 1 }
+    ],
+    "upgraded": {
+      "name": "Shrug It Off+",
+      "effects": [
+        { "type": "block", "value": 11 },
+        { "type": "draw", "value": 1 }
+      ]
+    },
+    "keywords": [],
+    "tags": []
+  },
+  {
+    "id": "twin_strike_001",
+    "name": "Twin Strike",
+    "type": "attack",
+    "rarity": "common",
+    "energyCost": 1,
+    "description": "Deal {damage} damage twice.",
+    "effects": [{ "type": "damage", "target": "single_enemy", "value": 5, "times": 2 }],
+    "upgraded": {
+      "name": "Twin Strike+",
+      "effects": [{ "type": "damage", "target": "single_enemy", "value": 7, "times": 2 }]
+    },
+    "keywords": [],
+    "tags": []
+  },
+  {
+    "id": "body_slam_001",
+    "name": "Body Slam",
+    "type": "attack",
+    "rarity": "common",
+    "energyCost": 1,
+    "description": "Deal damage equal to your Block.",
+    "effects": [{ "type": "damage", "target": "single_enemy", "value": 0, "scaling": [{ "stat": "block", "multiplier": 1 }] }],
+    "upgraded": {
+      "name": "Body Slam+",
+      "energyCost": 0,
+      "effects": [{ "type": "damage", "target": "single_enemy", "value": 0, "scaling": [{ "stat": "block", "multiplier": 1 }] }]
+    },
+    "keywords": [],
+    "tags": []
+  },
+  {
+    "id": "anger_001",
+    "name": "Anger",
+    "type": "attack",
+    "rarity": "common",
+    "energyCost": 0,
+    "description": "Deal {damage} damage. Add a copy to your discard pile.",
+    "effects": [
+      { "type": "damage", "target": "single_enemy", "value": 6 },
+      { "type": "add_to_discard", "cardId": "anger_001", "count": 1 }
+    ],
+    "upgraded": {
+      "name": "Anger+",
+      "effects": [
+        { "type": "damage", "target": "single_enemy", "value": 8 },
+        { "type": "add_to_discard", "cardId": "anger_001", "count": 1 }
+      ]
+    },
+    "keywords": [],
+    "tags": []
+  }
+]

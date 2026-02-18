@@ -1,0 +1,91 @@
+[
+  {
+    "id": "inflame_001",
+    "name": "Inflame",
+    "type": "power",
+    "rarity": "uncommon",
+    "energyCost": 1,
+    "description": "Gain 2 Strength.",
+    "effects": [{ "type": "apply_status", "status": "strength", "value": 2, "target": "player" }],
+    "upgraded": {
+      "name": "Inflame+",
+      "effects": [{ "type": "apply_status", "status": "strength", "value": 3, "target": "player" }]
+    },
+    "keywords": [],
+    "tags": []
+  },
+  {
+    "id": "battle_trance_001",
+    "name": "Battle Trance",
+    "type": "skill",
+    "rarity": "uncommon",
+    "energyCost": 0,
+    "description": "Draw 3 cards. You can't draw additional cards this turn.",
+    "effects": [{ "type": "draw", "value": 3 }],
+    "upgraded": {
+      "name": "Battle Trance+",
+      "effects": [{ "type": "draw", "value": 4 }]
+    },
+    "keywords": [],
+    "tags": []
+  },
+  {
+    "id": "carnage_001",
+    "name": "Carnage",
+    "type": "attack",
+    "rarity": "uncommon",
+    "energyCost": 2,
+    "description": "Deal {damage} damage. Ethereal.",
+    "effects": [{ "type": "damage", "target": "single_enemy", "value": 20 }],
+    "upgraded": {
+      "name": "Carnage+",
+      "effects": [{ "type": "damage", "target": "single_enemy", "value": 28 }]
+    },
+    "keywords": ["Ethereal"],
+    "tags": []
+  },
+  {
+    "id": "uppercut_001",
+    "name": "Uppercut",
+    "type": "attack",
+    "rarity": "uncommon",
+    "energyCost": 2,
+    "description": "Deal {damage} damage. Apply 1 Weak. Apply 1 Vulnerable.",
+    "effects": [
+      { "type": "damage", "target": "single_enemy", "value": 13 },
+      { "type": "apply_status", "status": "weak", "value": 1, "target": "single_enemy" },
+      { "type": "apply_status", "status": "vulnerable", "value": 1, "target": "single_enemy" }
+    ],
+    "upgraded": {
+      "name": "Uppercut+",
+      "effects": [
+        { "type": "damage", "target": "single_enemy", "value": 13 },
+        { "type": "apply_status", "status": "weak", "value": 2, "target": "single_enemy" },
+        { "type": "apply_status", "status": "vulnerable", "value": 2, "target": "single_enemy" }
+      ]
+    },
+    "keywords": [],
+    "tags": []
+  },
+  {
+    "id": "shockwave_001",
+    "name": "Shockwave",
+    "type": "skill",
+    "rarity": "uncommon",
+    "energyCost": 2,
+    "description": "Apply 3 Weak and 3 Vulnerable to ALL enemies. Exhaust.",
+    "effects": [
+      { "type": "apply_status", "status": "weak", "value": 3, "target": "all_enemies" },
+      { "type": "apply_status", "status": "vulnerable", "value": 3, "target": "all_enemies" }
+    ],
+    "upgraded": {
+      "name": "Shockwave+",
+      "effects": [
+        { "type": "apply_status", "status": "weak", "value": 5, "target": "all_enemies" },
+        { "type": "apply_status", "status": "vulnerable", "value": 5, "target": "all_enemies" }
+      ]
+    },
+    "keywords": ["Exhaust"],
+    "tags": []
+  }
+]

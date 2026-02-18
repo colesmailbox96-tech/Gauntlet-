@@ -1,0 +1,76 @@
+[
+  {
+    "id": "bludgeon_001",
+    "name": "Bludgeon",
+    "type": "attack",
+    "rarity": "rare",
+    "energyCost": 3,
+    "description": "Deal {damage} damage.",
+    "effects": [{ "type": "damage", "target": "single_enemy", "value": 32 }],
+    "upgraded": {
+      "name": "Bludgeon+",
+      "effects": [{ "type": "damage", "target": "single_enemy", "value": 42 }]
+    },
+    "keywords": [],
+    "tags": []
+  },
+  {
+    "id": "feed_001",
+    "name": "Feed",
+    "type": "attack",
+    "rarity": "rare",
+    "energyCost": 1,
+    "description": "Deal {damage} damage. If this kills, gain 3 Max HP. Exhaust.",
+    "effects": [
+      { "type": "damage", "target": "single_enemy", "value": 10 },
+      { "type": "conditional", "condition": { "type": "kill" }, "thenEffects": [{ "type": "gain_max_hp", "value": 3 }] }
+    ],
+    "upgraded": {
+      "name": "Feed+",
+      "effects": [
+        { "type": "damage", "target": "single_enemy", "value": 12 },
+        { "type": "conditional", "condition": { "type": "kill" }, "thenEffects": [{ "type": "gain_max_hp", "value": 4 }] }
+      ]
+    },
+    "keywords": ["Exhaust"],
+    "tags": []
+  },
+  {
+    "id": "offering_001",
+    "name": "Offering",
+    "type": "skill",
+    "rarity": "rare",
+    "energyCost": 0,
+    "description": "Lose 6 HP. Gain 2 Energy. Draw 3 cards. Exhaust.",
+    "effects": [
+      { "type": "lose_hp", "value": 6 },
+      { "type": "gain_energy", "value": 2 },
+      { "type": "draw", "value": 3 }
+    ],
+    "upgraded": {
+      "name": "Offering+",
+      "effects": [
+        { "type": "lose_hp", "value": 6 },
+        { "type": "gain_energy", "value": 2 },
+        { "type": "draw", "value": 5 }
+      ]
+    },
+    "keywords": ["Exhaust"],
+    "tags": []
+  },
+  {
+    "id": "demon_form_001",
+    "name": "Demon Form",
+    "type": "power",
+    "rarity": "rare",
+    "energyCost": 3,
+    "description": "At the start of each turn, gain 2 Strength.",
+    "effects": [{ "type": "apply_status", "status": "ritual", "value": 2, "target": "player" }],
+    "upgraded": {
+      "name": "Demon Form+",
+      "effects": [{ "type": "apply_status", "status": "ritual", "value": 3, "target": "player" }]
+    },
+    "keywords": [],
+    "tags": []
+  }
+]
