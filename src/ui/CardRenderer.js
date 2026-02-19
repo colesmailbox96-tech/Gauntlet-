@@ -114,8 +114,8 @@ export class CardRenderer {
     const orbY = drawY + 18;
     const orbR = 14;
     const orbGrd = ctx.createRadialGradient(orbX - 3, orbY - 3, 2, orbX, orbY, orbR);
-    orbGrd.addColorStop(0, card.energyCost <= 0 ? '#5CDB5C' : '#FFD700');
-    orbGrd.addColorStop(1, card.energyCost <= 0 ? PALETTE.success : PALETTE.accentDark);
+    orbGrd.addColorStop(0, card.energyCost <= 0 ? PALETTE.success : PALETTE.accent);
+    orbGrd.addColorStop(1, card.energyCost <= 0 ? PALETTE.successDark : PALETTE.accentDark);
     ctx.fillStyle = orbGrd;
     ctx.beginPath();
     ctx.arc(orbX, orbY, orbR, 0, Math.PI * 2);

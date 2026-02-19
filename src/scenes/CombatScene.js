@@ -447,7 +447,8 @@ export class CombatScene {
 
     // Glow behind text
     const glowGrd = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, 200);
-    glowGrd.addColorStop(0, color.replace(')', ',0.1)').replace('rgb', 'rgba'));
+    const [cr, cg, cb] = this._hexToRgb(color);
+    glowGrd.addColorStop(0, `rgba(${cr},${cg},${cb},0.1)`);
     glowGrd.addColorStop(1, 'transparent');
     ctx.fillStyle = glowGrd;
     ctx.fillRect(0, 0, w, h);
@@ -627,6 +628,11 @@ export class CombatScene {
   getStatusColor(name) {
     const buffs = ['strength', 'dexterity', 'thorns', 'ritual', 'metallicize', 'regen', 'artifact', 'barricade'];
     return buffs.includes(name) ? PALETTE.intentBuff : PALETTE.intentDebuff;
+  }
+
+  _hexToRgb(hex) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    return [(num >> 16) & 0xFF, (num >> 8) & 0xFF, num & 0xFF];
   }
 
   unload() {}
