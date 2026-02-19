@@ -1,77 +1,109 @@
+import { EventBus } from './core/EventBus.js';
+import { GameState } from './core/GameState.js';
+import { SceneManager } from './core/SceneManager.js';
+import { SeededRandom } from './utils/SeededRandom.js';
+import { MapGenerator } from './map/MapGenerator.js';
+import { MainMenuScene } from './scenes/MainMenuScene.js';
+import { MapScene } from './scenes/MapScene.js';
+import { CombatScene } from './scenes/CombatScene.js';
+import { RewardScene } from './scenes/RewardScene.js';
+import { RestScene } from './scenes/RestScene.js';
+import { DeathScene } from './scenes/DeathScene.js';
+import { PALETTE } from './config.js';
+
 const app = document.querySelector('#app');
 
 if (app) {
   app.innerHTML = `
-    <h1>Arcane Gauntlet</h1>
-    <p id="run-status">Ready to begin a practice run.</p>
-    <canvas id="game-canvas" role="img" aria-label="Practice combat preview"></canvas>
-    <button id="start-run" type="button" aria-label="Start practice run">Start Practice Run</button>
+    <canvas id="game-canvas" role="img" aria-label="Arcane Gauntlet game"></canvas>
   `;
 
   const style = document.createElement('style');
   style.textContent = `
-    #app { max-width: 960px; margin: 0 auto; padding: 16px; font-family: system-ui, sans-serif; }
-    #game-canvas { width: 100%; max-width: 960px; aspect-ratio: 16 / 9; border: 1px solid #1f2937; border-radius: 8px; display: block; background: #0b1220; margin: 12px 0; }
-    #start-run { background: #4f46e5; color: #fff; border: 0; border-radius: 6px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
-    #start-run:hover { background: #4338ca; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: ${PALETTE.background}; }
+    #app { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+    #game-canvas { width: 100%; max-width: 960px; aspect-ratio: 16 / 9; border-radius: 8px; display: block; background: ${PALETTE.background}; cursor: default; }
   `;
   document.head.append(style);
 
-  const canvas = document.querySelector('#game-canvas');
-  const runStatus = document.querySelector('#run-status');
-  const startRunButton = document.querySelector('#start-run');
-  const context = canvas?.getContext('2d');
-  const DAMAGE_PER_ACTION = 6;
-  const HP_BAR_SCALE = 8;
-  const ENEMY_STARTING_HP = 24;
-  const state = { started: false, floor: 0, enemyHp: ENEMY_STARTING_HP };
+  const canvas = /** @type {HTMLCanvasElement} */ (document.querySelector('#game-canvas'));
+  const ctx = canvas?.getContext('2d');
+  if (!canvas || !ctx) throw new Error('Canvas not available');
 
-  const drawScene = () => {
-    if (!canvas || !context) return;
-    canvas.width = 960;
-    canvas.height = 540;
-    context.fillStyle = '#0b1220';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = '#f9fafb';
-    context.font = '700 32px system-ui';
-    context.fillText('Practice Arena', 32, 56);
-    context.font = '500 22px system-ui';
-    context.fillText(`Floor ${state.floor}`, 32, 100);
-    context.fillText(`Enemy HP: ${state.enemyHp}`, 32, 134);
-    context.fillStyle = '#ef4444';
-    context.fillRect(32, 156, Math.min(canvas.width - 64, Math.max(0, state.enemyHp * HP_BAR_SCALE)), 24);
-  };
+  // Core systems
+  const eventBus = new EventBus();
+  const gameState = new GameState();
+  const rng = new SeededRandom(Date.now());
+  const sceneManager = new SceneManager(eventBus);
+  const mapGenerator = new MapGenerator(rng);
 
-  startRunButton?.addEventListener('click', () => {
-    const justStarted = !state.started;
-    if (justStarted) {
-      state.started = true;
-      state.floor = 1;
-      startRunButton.textContent = 'Attack Enemy';
-      startRunButton.setAttribute('aria-label', 'Attack the enemy to deal damage');
-      if (runStatus) {
-        runStatus.textContent = `Run started — floor ${state.floor}, enemy HP ${state.enemyHp}.`;
-      }
-      drawScene();
-      return;
-    }
+  // Register scenes
+  const mainMenuScene = new MainMenuScene(gameState, eventBus, sceneManager);
+  const mapScene = new MapScene(gameState, eventBus, sceneManager, mapGenerator);
+  const combatScene = new CombatScene(gameState, eventBus, sceneManager, rng);
+  const rewardScene = new RewardScene(gameState, eventBus, sceneManager, rng);
+  const restScene = new RestScene(gameState, eventBus, sceneManager);
+  const deathScene = new DeathScene(gameState, eventBus, sceneManager);
 
-    state.enemyHp = Math.max(0, state.enemyHp - DAMAGE_PER_ACTION);
-    if (state.enemyHp === 0) {
-      state.floor += 1;
-      state.enemyHp = ENEMY_STARTING_HP;
-      if (runStatus) {
-        runStatus.textContent = `Enemy defeated — entering floor ${state.floor} with enemy HP ${state.enemyHp}.`;
-      }
-      drawScene();
-      return;
-    }
+  sceneManager.register('MAIN_MENU', mainMenuScene);
+  sceneManager.register('MAP', mapScene);
+  sceneManager.register('COMBAT', combatScene);
+  sceneManager.register('REWARD', rewardScene);
+  sceneManager.register('REST', restScene);
+  sceneManager.register('DEATH', deathScene);
 
-    if (runStatus) {
-      runStatus.textContent = `Attack landed — floor ${state.floor}, enemy HP ${state.enemyHp}.`;
-    }
-    drawScene();
+  // Input handling
+  function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+      canvasWidth: canvas.width,
+      canvasHeight: canvas.height,
+    };
+  }
+
+  canvas.addEventListener('click', (e) => {
+    const coords = getCanvasCoords(e);
+    sceneManager.handleInput({ type: 'click', ...coords });
   });
 
-  drawScene();
+  canvas.addEventListener('mousemove', (e) => {
+    const coords = getCanvasCoords(e);
+    sceneManager.handleInput({ type: 'mousemove', ...coords });
+  });
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    sceneManager.handleInput({ type: 'wheel', deltaY: e.deltaY });
+  }, { passive: false });
+
+  document.addEventListener('keydown', (e) => {
+    sceneManager.handleInput({ type: 'keydown', key: e.key });
+  });
+
+  // Game loop
+  let lastTime = performance.now();
+
+  function gameLoop(now) {
+    const dt = Math.min((now - lastTime) / 1000, 0.1);
+    lastTime = now;
+
+    // Set canvas resolution
+    canvas.width = 960;
+    canvas.height = 540;
+
+    // Update & render
+    sceneManager.update(dt);
+    sceneManager.render(ctx);
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Start the game
+  sceneManager.switchTo('MAIN_MENU');
+  requestAnimationFrame(gameLoop);
 }

@@ -1,0 +1,139 @@
+[
+  {
+    "id": "jaw_worm",
+    "name": "Jaw Worm",
+    "act": 1,
+    "tier": "normal",
+    "hp": { "min": 40, "max": 44 },
+    "behavior": {
+      "type": "pattern",
+      "pattern": [
+        {
+          "id": "chomp",
+          "intent": "attack",
+          "weight": 45,
+          "effects": [{ "type": "damage", "value": 11 }],
+          "conditions": [],
+          "adaptiveTag": "aggression"
+        },
+        {
+          "id": "thrash",
+          "intent": "attack",
+          "weight": 30,
+          "effects": [
+            { "type": "damage", "value": 7 },
+            { "type": "block", "value": 5 }
+          ],
+          "conditions": [],
+          "adaptiveTag": "defense"
+        },
+        {
+          "id": "bellow",
+          "intent": "buff",
+          "weight": 25,
+          "effects": [
+            { "type": "apply_status", "status": "strength", "value": 3, "target": "self" },
+            { "type": "block", "value": 6 }
+          ],
+          "conditions": [{ "type": "not_consecutive", "actionId": "bellow" }],
+          "adaptiveTag": "setup"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cultist",
+    "name": "Cultist",
+    "act": 1,
+    "tier": "normal",
+    "hp": { "min": 48, "max": 54 },
+    "behavior": {
+      "type": "pattern",
+      "pattern": [
+        {
+          "id": "incantation",
+          "intent": "buff",
+          "weight": 100,
+          "effects": [{ "type": "apply_status", "status": "ritual", "value": 3, "target": "self" }],
+          "conditions": [{ "type": "first_turn" }],
+          "adaptiveTag": "setup"
+        },
+        {
+          "id": "dark_strike",
+          "intent": "attack",
+          "weight": 100,
+          "effects": [{ "type": "damage", "value": 6 }],
+          "conditions": [],
+          "adaptiveTag": "aggression"
+        }
+      ]
+    }
+  },
+  {
+    "id": "louse_red",
+    "name": "Red Louse",
+    "act": 1,
+    "tier": "normal",
+    "hp": { "min": 10, "max": 15 },
+    "behavior": {
+      "type": "pattern",
+      "pattern": [
+        {
+          "id": "bite",
+          "intent": "attack",
+          "weight": 75,
+          "effects": [{ "type": "damage", "value": 6 }],
+          "conditions": [],
+          "adaptiveTag": "aggression"
+        },
+        {
+          "id": "grow",
+          "intent": "buff",
+          "weight": 25,
+          "effects": [{ "type": "apply_status", "status": "strength", "value": 3, "target": "self" }],
+          "conditions": [{ "type": "not_consecutive", "actionId": "grow" }],
+          "adaptiveTag": "setup"
+        }
+      ]
+    }
+  },
+  {
+    "id": "goblin_warrior",
+    "name": "Goblin Warrior",
+    "act": 1,
+    "tier": "normal",
+    "hp": { "min": 28, "max": 32 },
+    "behavior": {
+      "type": "pattern",
+      "pattern": [
+        {
+          "id": "slash",
+          "intent": "attack",
+          "weight": 50,
+          "effects": [{ "type": "damage", "value": 8 }],
+          "conditions": [],
+          "adaptiveTag": "aggression"
+        },
+        {
+          "id": "shield_bash",
+          "intent": "attack",
+          "weight": 30,
+          "effects": [
+            { "type": "damage", "value": 5 },
+            { "type": "apply_status", "status": "vulnerable", "value": 1, "target": "player" }
+          ],
+          "conditions": [{ "type": "not_consecutive", "actionId": "shield_bash" }],
+          "adaptiveTag": "setup"
+        },
+        {
+          "id": "brace",
+          "intent": "defend",
+          "weight": 20,
+          "effects": [{ "type": "block", "value": 6 }],
+          "conditions": [{ "type": "hp_below_percent", "value": 50 }],
+          "adaptiveTag": "defense"
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,10 @@
+[
+  {
+    "id": "burning_blood",
+    "name": "Burning Blood",
+    "description": "At the end of combat, heal 6 HP.",
+    "rarity": "starter",
+    "hooks": [{ "event": "onCombatEnd", "effect": { "type": "heal", "value": 6 } }],
+    "flavor": "The thick blood of demons fuels your recovery."
+  }
+]

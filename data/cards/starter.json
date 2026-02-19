@@ -1,0 +1,56 @@
+[
+  {
+    "id": "strike_001",
+    "name": "Strike",
+    "type": "attack",
+    "rarity": "starter",
+    "energyCost": 1,
+    "description": "Deal {damage} damage.",
+    "effects": [{ "type": "damage", "target": "single_enemy", "value": 6 }],
+    "upgraded": {
+      "name": "Strike+",
+      "description": "Deal {damage} damage.",
+      "effects": [{ "type": "damage", "target": "single_enemy", "value": 9 }]
+    },
+    "keywords": [],
+    "tags": ["basic"]
+  },
+  {
+    "id": "defend_001",
+    "name": "Defend",
+    "type": "skill",
+    "rarity": "starter",
+    "energyCost": 1,
+    "description": "Gain {block} Block.",
+    "effects": [{ "type": "block", "value": 5 }],
+    "upgraded": {
+      "name": "Defend+",
+      "description": "Gain {block} Block.",
+      "effects": [{ "type": "block", "value": 8 }]
+    },
+    "keywords": [],
+    "tags": ["basic"]
+  },
+  {
+    "id": "bash_001",
+    "name": "Bash",
+    "type": "attack",
+    "rarity": "starter",
+    "energyCost": 2,
+    "description": "Deal {damage} damage. Apply 2 Vulnerable.",
+    "effects": [
+      { "type": "damage", "target": "single_enemy", "value": 8 },
+      { "type": "apply_status", "status": "vulnerable", "value": 2, "target": "single_enemy" }
+    ],
+    "upgraded": {
+      "name": "Bash+",
+      "description": "Deal {damage} damage. Apply 3 Vulnerable.",
+      "effects": [
+        { "type": "damage", "target": "single_enemy", "value": 10 },
+        { "type": "apply_status", "status": "vulnerable", "value": 3, "target": "single_enemy" }
+      ]
+    },
+    "keywords": [],
+    "tags": ["basic"]
+  }
+]
