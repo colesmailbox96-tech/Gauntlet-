@@ -21,9 +21,15 @@ if (app) {
   const style = document.createElement('style');
   style.textContent = `
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: ${PALETTE.background}; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0D0D1A; }
     #app { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-    #game-canvas { width: 100%; max-width: 960px; aspect-ratio: 16 / 9; border-radius: 8px; display: block; background: ${PALETTE.background}; cursor: default; }
+    #game-canvas {
+      width: 100%; max-width: 960px; aspect-ratio: 16 / 9;
+      border-radius: 12px; display: block;
+      background: ${PALETTE.background};
+      cursor: default;
+      box-shadow: 0 0 40px rgba(233,69,96,0.08), 0 8px 32px rgba(0,0,0,0.5);
+    }
   `;
   document.head.append(style);
 
