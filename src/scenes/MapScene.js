@@ -21,6 +21,15 @@ const NODE_LABELS = {
   boss: '👹',
 };
 
+const LEGEND_ITEMS = [
+  { type: 'combat', label: 'Fight' },
+  { type: 'elite', label: 'Elite' },
+  { type: 'event', label: 'Event' },
+  { type: 'shop', label: 'Shop' },
+  { type: 'rest', label: 'Rest' },
+  { type: 'treasure', label: 'Loot' },
+];
+
 /**
  * Map scene for navigating the branching node map.
  */
@@ -38,6 +47,7 @@ export class MapScene {
     this.mapGenerator = mapGenerator;
     this.scrollY = 0;
     this.nodePositions = [];
+    this.time = 0;
   }
 
   load() {
@@ -50,6 +60,7 @@ export class MapScene {
 
     this.calculateNodePositions();
     this.autoScrollToCurrentRow();
+    this.time = 0;
   }
 
   calculateNodePositions() {
@@ -77,7 +88,6 @@ export class MapScene {
     const map = this.gameState.run.map;
     if (!map) return;
 
-    // Find the first available row
     let targetRow = 0;
     for (const row of map.nodes) {
       for (const node of row) {
@@ -88,16 +98,14 @@ export class MapScene {
       }
     }
 
-    // The node y position in local coords is: totalHeight - targetRow * rowSpacing
-    // We want that position to appear roughly at canvas center (h/2)
-    // Rendered at: h*0.55 + scrollY + nodeY => should be ~h/2
-    // scrollY = h/2 - h*0.55 - nodeY = -0.05*h - nodeY
     const totalHeight = map.nodes.length * 80;
     const nodeY = totalHeight - targetRow * 80;
     this.scrollY = -nodeY + 100;
   }
 
-  update(dt) {}
+  update(dt) {
+    this.time += dt;
+  }
 
   render(ctx) {
     const w = ctx.canvas.width;
@@ -110,84 +118,120 @@ export class MapScene {
 
     if (!map) return;
 
-    // Header
-    ctx.fillStyle = PALETTE.text;
-    ctx.font = '700 28px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`Act ${this.gameState.run.act} — Floor ${this.gameState.run.floor}`, w / 2, 40);
+    // Header panel
+    ctx.fillStyle = PALETTE.surface;
+    ctx.fillRect(0, 0, w, 56);
+    // Header bottom border
+    const hdrGrd = ctx.createLinearGradient(0, 56, w, 56);
+    hdrGrd.addColorStop(0, 'transparent');
+    hdrGrd.addColorStop(0.5, 'rgba(233,69,96,0.3)');
+    hdrGrd.addColorStop(1, 'transparent');
+    ctx.strokeStyle = hdrGrd;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 56);
+    ctx.lineTo(w, 56);
+    ctx.stroke();
 
-    // Player stats bar
-    ctx.font = '500 16px system-ui, sans-serif';
+    // Header text
     ctx.fillStyle = PALETTE.text;
+    ctx.font = '700 26px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`Act ${this.gameState.run.act} — Floor ${this.gameState.run.floor}`, w / 2, 28);
+
+    // Player stats
+    ctx.font = '600 15px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(`HP: ${this.gameState.run.playerHP}/${this.gameState.run.playerMaxHP}`, 20, 40);
-    ctx.fillText(`Gold: ${this.gameState.run.gold}`, 200, 40);
+    // HP pill
+    const hpPct = this.gameState.run.playerHP / this.gameState.run.playerMaxHP;
+    const hpCol = hpPct > 0.5 ? PALETTE.success : hpPct > 0.25 ? PALETTE.warning : PALETTE.danger;
+    ctx.fillStyle = hpCol;
+    ctx.fillText(`♥ ${this.gameState.run.playerHP}/${this.gameState.run.playerMaxHP}`, 16, 28);
+    // Gold
+    ctx.fillStyle = PALETTE.accent;
+    ctx.fillText(`⬥ ${this.gameState.run.gold}`, 170, 28);
     ctx.textAlign = 'center';
 
     ctx.save();
     ctx.translate(w / 2, h * 0.55 + this.scrollY);
 
-    // Draw connections
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 2;
+    // Draw connections as bezier curves
     for (const [fromRow, fromCol, toRow, toCol] of map.connections) {
       const from = this.nodePositions.find(n => n.row === fromRow && n.col === fromCol);
       const to = this.nodePositions.find(n => n.row === toRow && n.col === toCol);
       if (from && to) {
-        // Highlight connection if from is visited and to is available
         if (from.node.visited && to.node.available) {
-          ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+          ctx.strokeStyle = 'rgba(233,69,96,0.5)';
           ctx.lineWidth = 3;
         } else if (from.node.visited) {
-          ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+          ctx.strokeStyle = 'rgba(255,255,255,0.25)';
           ctx.lineWidth = 2;
         } else {
-          ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+          ctx.strokeStyle = 'rgba(255,255,255,0.08)';
           ctx.lineWidth = 1;
         }
+        // Bezier curve
+        const midY = (from.y + to.y) / 2;
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
-        ctx.lineTo(to.x, to.y);
+        ctx.bezierCurveTo(from.x, midY, to.x, midY, to.x, to.y);
         ctx.stroke();
       }
     }
 
     // Draw nodes
+    const pulse = Math.sin(this.time * 3) * 0.3 + 0.7;
     for (const pos of this.nodePositions) {
       const { node, x, y } = pos;
       const radius = node.type === 'boss' ? 22 : 16;
       const color = NODE_COLORS[node.type] || '#999';
+
+      if (node.available) {
+        // Pulsing outer glow for available nodes
+        ctx.save();
+        ctx.globalAlpha = 0.25 * pulse;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
 
       // Node circle
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
 
       if (node.visited) {
-        ctx.fillStyle = 'rgba(100,100,100,0.5)';
+        ctx.fillStyle = 'rgba(80,80,80,0.5)';
         ctx.fill();
-        ctx.strokeStyle = '#666';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
       } else if (node.available) {
-        ctx.fillStyle = color;
+        // Gradient fill for available nodes
+        const nGrd = ctx.createRadialGradient(x - 3, y - 3, 2, x, y, radius);
+        nGrd.addColorStop(0, '#fff');
+        nGrd.addColorStop(0.3, color);
+        nGrd.addColorStop(1, color);
+        ctx.fillStyle = nGrd;
         ctx.fill();
-        // Pulsing outline for available nodes
         ctx.strokeStyle = PALETTE.text;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
       } else {
         ctx.fillStyle = color;
-        ctx.globalAlpha = 0.4;
+        ctx.globalAlpha = 0.3;
         ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
         ctx.lineWidth = 1;
         ctx.stroke();
       }
 
       // Node label
-      ctx.fillStyle = node.visited ? '#999' : PALETTE.text;
-      ctx.font = `${radius}px system-ui, sans-serif`;
+      ctx.fillStyle = node.visited ? '#777' : '#fff';
+      ctx.font = `${radius}px "Segoe UI", system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(NODE_LABELS[node.type] || '?', x, y);
@@ -195,11 +239,29 @@ export class MapScene {
 
     ctx.restore();
 
+    // Legend (bottom-left)
+    ctx.save();
+    ctx.font = '500 11px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    let lx = 12;
+    const ly = h - 16;
+    for (const item of LEGEND_ITEMS) {
+      ctx.fillStyle = NODE_COLORS[item.type];
+      ctx.beginPath();
+      ctx.arc(lx + 5, ly, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = PALETTE.textDim;
+      ctx.fillText(item.label, lx + 12, ly);
+      lx += ctx.measureText(item.label).width + 22;
+    }
+    ctx.restore();
+
     // Instructions
-    ctx.fillStyle = PALETTE.textSecondary;
-    ctx.font = '400 14px system-ui, sans-serif';
+    ctx.fillStyle = PALETTE.textDim;
+    ctx.font = '400 13px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Click an available node to proceed', w / 2, h - 20);
+    ctx.fillText('Click an available node to proceed  •  Scroll to navigate', w / 2, h - 14);
   }
 
   handleInput(event) {

@@ -92,6 +92,7 @@ export class CombatScene {
         x: 120 + Math.random() * 40,
         y: 120,
         alpha: 1,
+        scale: 1.5,
         color: PALETTE.danger,
       });
     }
@@ -102,6 +103,7 @@ export class CombatScene {
     this.damageNumbers = this.damageNumbers.filter(d => {
       d.y -= 40 * dt;
       d.alpha -= dt;
+      d.scale = Math.max(1, d.scale - dt * 2);
       return d.alpha > 0;
     });
   }
@@ -116,11 +118,32 @@ export class CombatScene {
     ctx.fillStyle = PALETTE.background;
     ctx.fillRect(0, 0, w, h);
 
+    // Subtle ambient glow behind enemies
+    const ambGrd = ctx.createRadialGradient(w / 2, 130, 30, w / 2, 130, 250);
+    ambGrd.addColorStop(0, 'rgba(15,52,96,0.12)');
+    ambGrd.addColorStop(1, 'transparent');
+    ctx.fillStyle = ambGrd;
+    ctx.fillRect(0, 0, w, h);
+
     // Top bar — player stats
     this.renderTopBar(ctx, w, state);
 
     // Enemy area
     this.renderEnemies(ctx, w, h, state);
+
+    // Divider between enemy and player areas
+    const divY = h * 0.45;
+    const divGrd = ctx.createLinearGradient(0, divY, w, divY);
+    divGrd.addColorStop(0, 'transparent');
+    divGrd.addColorStop(0.3, 'rgba(255,255,255,0.06)');
+    divGrd.addColorStop(0.7, 'rgba(255,255,255,0.06)');
+    divGrd.addColorStop(1, 'transparent');
+    ctx.strokeStyle = divGrd;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, divY);
+    ctx.lineTo(w, divY);
+    ctx.stroke();
 
     // Middle area — energy, draw/discard piles
     this.renderMiddleArea(ctx, w, h, state);
@@ -133,23 +156,35 @@ export class CombatScene {
 
     // Phase overlay
     if (state.phase === 'WON') {
-      this.renderOverlay(ctx, w, h, 'VICTORY!', PALETTE.success);
+      this.renderOverlay(ctx, w, h, 'VICTORY!', PALETTE.success, 'Rewards await...');
     } else if (state.phase === 'LOST') {
-      this.renderOverlay(ctx, w, h, 'DEFEATED', PALETTE.danger);
+      this.renderOverlay(ctx, w, h, 'DEFEATED', PALETTE.danger, 'Your journey ends here.');
     } else if (state.phase === 'ENEMY_TURN') {
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = PALETTE.warning;
-      ctx.font = '700 24px system-ui, sans-serif';
+      ctx.font = '700 24px "Segoe UI", system-ui, sans-serif';
       ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillText('Enemy Turn...', w / 2, h / 2);
     }
   }
 
   renderTopBar(ctx, w, state) {
-    // Background bar
-    ctx.fillStyle = PALETTE.surface;
-    ctx.fillRect(0, 0, w, 50);
+    // Background bar with gradient
+    const barGrd = ctx.createLinearGradient(0, 0, 0, 52);
+    barGrd.addColorStop(0, PALETTE.surface);
+    barGrd.addColorStop(1, PALETTE.background);
+    ctx.fillStyle = barGrd;
+    ctx.fillRect(0, 0, w, 52);
+
+    // Bottom border glow
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 52);
+    ctx.lineTo(w, 52);
+    ctx.stroke();
 
     // Player HP
     this.playerHealthBar.x = 16;
@@ -159,24 +194,36 @@ export class CombatScene {
 
     // Gold
     ctx.fillStyle = PALETTE.accent;
-    ctx.font = '700 16px system-ui, sans-serif';
+    ctx.font = '700 15px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(`💰 ${this.gameState.run.gold}`, 250, 30);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`⬥ ${this.gameState.run.gold}`, 250, 26);
 
-    // Deck info
-    ctx.fillStyle = PALETTE.textSecondary;
-    ctx.font = '400 14px system-ui, sans-serif';
+    // Turn number
+    ctx.fillStyle = PALETTE.textDim;
+    ctx.font = '500 13px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(`Turn ${state.turnNumber}`, w - 20, 30);
+    ctx.fillText(`Turn ${state.turnNumber}`, w - 20, 26);
 
     // Status effects
     let statusX = 340;
+    ctx.textAlign = 'left';
     for (const [name, value] of state.playerStatus) {
-      ctx.fillStyle = this.getStatusColor(name);
-      ctx.font = '600 13px system-ui, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(`${name}: ${value}`, statusX, 30);
-      statusX += ctx.measureText(`${name}: ${value}`).width + 12;
+      const col = this.getStatusColor(name);
+      ctx.fillStyle = col;
+      ctx.font = '600 12px "Segoe UI", system-ui, sans-serif';
+      // Status pill background
+      const tw = ctx.measureText(`${name}: ${value}`).width + 10;
+      ctx.save();
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.roundRect(statusX - 4, 18, tw, 18, 4);
+      ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = col;
+      ctx.fillText(`${name}: ${value}`, statusX, 28);
+      statusX += tw + 6;
     }
   }
 
@@ -190,31 +237,56 @@ export class CombatScene {
       const ex = startX + i * spacing;
       const ey = 130;
 
-      // Enemy body (placeholder rectangle)
-      ctx.fillStyle = enemy.tier === 'boss' ? '#8B0000' : PALETTE.secondary;
+      // Enemy body with gradient
+      const isBoss = enemy.tier === 'boss';
+      const bodyGrd = ctx.createLinearGradient(ex - 40, ey - 30, ex - 40, ey + 30);
+      bodyGrd.addColorStop(0, isBoss ? '#9B0000' : PALETTE.secondaryLight);
+      bodyGrd.addColorStop(1, isBoss ? '#5B0000' : PALETTE.secondary);
+      ctx.fillStyle = bodyGrd;
       ctx.beginPath();
-      ctx.roundRect(ex - 40, ey - 30, 80, 60, 8);
+      ctx.roundRect(ex - 40, ey - 30, 80, 60, 10);
       ctx.fill();
-      ctx.strokeStyle = enemy.tier === 'boss' ? '#FF4444' : '#666';
-      ctx.lineWidth = 2;
+      // Border
+      ctx.strokeStyle = isBoss ? '#FF4444' : 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = isBoss ? 2 : 1;
+      ctx.stroke();
+      // Inner highlight
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(ex - 39, ey - 29, 78, 58, 9);
       ctx.stroke();
 
       // Enemy name
       ctx.fillStyle = PALETTE.text;
-      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.font = '600 14px "Segoe UI", system-ui, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(enemy.name, ex, ey - 40);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(enemy.name, ex, ey - 42);
 
       // Enemy HP bar
       const hpBarW = 80;
+      const hpBarH = 10;
       const hpPct = enemy.hp / enemy.maxHp;
-      ctx.fillStyle = '#333';
-      ctx.fillRect(ex - hpBarW / 2, ey + 38, hpBarW, 10);
-      ctx.fillStyle = hpPct > 0.5 ? PALETTE.danger : '#FF6B6B';
-      ctx.fillRect(ex - hpBarW / 2, ey + 38, hpBarW * hpPct, 10);
+      // Background
+      ctx.fillStyle = '#222';
+      ctx.beginPath();
+      ctx.roundRect(ex - hpBarW / 2, ey + 36, hpBarW, hpBarH, 3);
+      ctx.fill();
+      // Fill
+      if (hpPct > 0) {
+        const ehGrd = ctx.createLinearGradient(ex - hpBarW / 2, ey + 36, ex - hpBarW / 2, ey + 36 + hpBarH);
+        ehGrd.addColorStop(0, PALETTE.danger);
+        ehGrd.addColorStop(1, PALETTE.dangerDark);
+        ctx.fillStyle = ehGrd;
+        ctx.beginPath();
+        ctx.roundRect(ex - hpBarW / 2, ey + 36, hpBarW * hpPct, hpBarH, 3);
+        ctx.fill();
+      }
+      // HP text
       ctx.fillStyle = PALETTE.text;
-      ctx.font = '600 10px system-ui, sans-serif';
-      ctx.fillText(`${enemy.hp}/${enemy.maxHp}`, ex, ey + 45);
+      ctx.font = '600 9px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText(`${enemy.hp}/${enemy.maxHp}`, ex, ey + 41);
 
       // Block indicator
       if (enemy.block > 0) {
@@ -222,28 +294,41 @@ export class CombatScene {
         ctx.beginPath();
         ctx.arc(ex + 50, ey - 10, 12, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = PALETTE.text;
-        ctx.font = '700 11px system-ui, sans-serif';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = '700 11px "Segoe UI", system-ui, sans-serif';
         ctx.fillText(`${enemy.block}`, ex + 50, ey - 10);
       }
 
-      // Intent display
+      // Intent display with icon background
       if (enemy.currentIntent) {
         const intent = enemy.currentIntent;
         const intentColor = this.getIntentColor(intent.intent);
+        const intentText = this.getIntentText(intent);
+        const tw = ctx.measureText(intentText).width + 14;
+        // Intent pill
+        ctx.save();
+        ctx.globalAlpha = 0.2;
         ctx.fillStyle = intentColor;
-        ctx.font = '600 13px system-ui, sans-serif';
-        ctx.fillText(this.getIntentText(intent), ex, ey - 55);
+        ctx.beginPath();
+        ctx.roundRect(ex - tw / 2, ey - 65, tw, 20, 5);
+        ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = intentColor;
+        ctx.font = '600 13px "Segoe UI", system-ui, sans-serif';
+        ctx.fillText(intentText, ex, ey - 55);
       }
 
       // Enemy status effects
       const statuses = enemy.statusEffects.getAll();
       if (statuses.length > 0) {
-        ctx.font = '500 10px system-ui, sans-serif';
+        ctx.font = '500 10px "Segoe UI", system-ui, sans-serif';
         let sx = ex - 30;
         for (const [name, value] of statuses) {
           ctx.fillStyle = this.getStatusColor(name);
-          ctx.fillText(`${name.slice(0, 3)}:${value}`, sx, ey + 60);
+          ctx.fillText(`${name.slice(0, 3)}:${value}`, sx, ey + 56);
           sx += 40;
         }
       }
@@ -253,17 +338,32 @@ export class CombatScene {
   renderMiddleArea(ctx, w, h, state) {
     const midY = h * 0.55;
 
-    // Energy orb
+    // Energy orb with gradient
     const energyX = 60;
+    const orbGrd = ctx.createRadialGradient(energyX - 5, midY - 5, 3, energyX, midY, 28);
+    orbGrd.addColorStop(0, state.energy > 0 ? '#FFD700' : '#666');
+    orbGrd.addColorStop(1, state.energy > 0 ? PALETTE.accentDark : '#333');
     ctx.beginPath();
     ctx.arc(energyX, midY, 28, 0, Math.PI * 2);
-    ctx.fillStyle = state.energy > 0 ? PALETTE.accent : '#555';
+    ctx.fillStyle = orbGrd;
     ctx.fill();
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 3;
+    // Orb border
+    ctx.strokeStyle = state.energy > 0 ? 'rgba(255,215,0,0.4)' : '#444';
+    ctx.lineWidth = 2;
     ctx.stroke();
+    // Outer glow
+    if (state.energy > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.08;
+      ctx.fillStyle = PALETTE.accent;
+      ctx.beginPath();
+      ctx.arc(energyX, midY, 36, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    // Energy text
     ctx.fillStyle = '#000';
-    ctx.font = '700 22px system-ui, sans-serif';
+    ctx.font = '700 22px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(`${state.energy}/${state.maxEnergy}`, energyX, midY);
@@ -273,8 +373,11 @@ export class CombatScene {
     ctx.beginPath();
     ctx.roundRect(20, midY + 40, 70, 30, 6);
     ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
     ctx.fillStyle = PALETTE.textSecondary;
-    ctx.font = '500 12px system-ui, sans-serif';
+    ctx.font = '500 12px "Segoe UI", system-ui, sans-serif';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(`Draw: ${state.drawPileSize}`, 55, midY + 60);
 
@@ -283,6 +386,9 @@ export class CombatScene {
     ctx.beginPath();
     ctx.roundRect(w - 90, midY + 40, 70, 30, 6);
     ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
     ctx.fillStyle = PALETTE.textSecondary;
     ctx.fillText(`Disc: ${state.discardPileSize}`, w - 55, midY + 60);
 
@@ -318,23 +424,52 @@ export class CombatScene {
 
   renderDamageNumbers(ctx) {
     for (const d of this.damageNumbers) {
+      ctx.save();
       ctx.globalAlpha = d.alpha;
       ctx.fillStyle = d.color;
-      ctx.font = '700 24px system-ui, sans-serif';
+      const fontSize = Math.round(24 * d.scale);
+      ctx.font = `700 ${fontSize}px "Segoe UI", system-ui, sans-serif`;
       ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Text outline for readability
+      ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+      ctx.lineWidth = 3;
+      ctx.strokeText(d.text, d.x, d.y);
       ctx.fillText(d.text, d.x, d.y);
+      ctx.restore();
     }
-    ctx.globalAlpha = 1;
   }
 
-  renderOverlay(ctx, w, h, text, color) {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  renderOverlay(ctx, w, h, text, color, subtitle) {
+    // Dark overlay with vignette
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
     ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = color;
-    ctx.font = '700 48px system-ui, sans-serif';
+
+    // Glow behind text
+    const glowGrd = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, 200);
+    glowGrd.addColorStop(0, color.replace(')', ',0.1)').replace('rgb', 'rgba'));
+    glowGrd.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGrd;
+    ctx.fillRect(0, 0, w, h);
+
+    // Main text shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.font = '700 50px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, w / 2, h / 2);
+    ctx.fillText(text, w / 2 + 2, h / 2 - 8);
+
+    // Main text
+    ctx.fillStyle = color;
+    ctx.font = '700 50px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText(text, w / 2, h / 2 - 10);
+
+    // Subtitle
+    if (subtitle) {
+      ctx.fillStyle = PALETTE.textSecondary;
+      ctx.font = '400 16px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText(subtitle, w / 2, h / 2 + 25);
+    }
   }
 
   handleInput(event) {
